@@ -11,39 +11,46 @@ interface WorldBankEntity {
     grounds: string;
 }
 
+interface Result {
+    count: number;
+    items: WorldBankEntity[];
+}
+
 @Injectable()
 export class WorldBankScraper {
     private readonly worldBankUrl = 'https://projects.worldbank.org/en/projects-operations/procurement/debarred-firms';
 
     async search(name: string) {
-        try {
-            const browser = await puppeteer.launch({
-                headless: true,
-                defaultViewport: null,
-            });
+        const browser = await puppeteer.launch({
+            headless: true,
+            defaultViewport: null,
+        });
+        const page = await browser.newPage();
 
-            const page = await browser.newPage();
+        try {
+
             await page.goto(this.worldBankUrl, { waitUntil: 'networkidle2' });
             await page.waitForSelector('input[id="category"]', { timeout: 20000 }).catch(() => {});
 
             await page.type('input[id="category"]', name, { delay: 100 });
             await page.keyboard.press('Enter');
 
-            await page.waitForSelector('table', { visible: true, timeout: 30000 });
-            await page.waitForSelector('div.k-grid-content.k-auto-scrollable table', { visible: true, timeout: 30000 });
+            //await page.waitForSelector('table', { visible: true, timeout: 30000 });
+            await page.waitForSelector('div.k-grid-content.k-auto-scrollable table', { visible: true, timeout: 4000 });
 
             const tableHtml = await page.$eval('div.k-grid-content.k-auto-scrollable table', el => el.outerHTML);
-            console.log(tableHtml);
+
             await browser.close();
             return this.transformHtmlToJson(tableHtml);
 
         } catch (error) {
-            console.error('Error fetching data from World Bank API:', error);
-            return {message: 'Error fetching data from World Bank API'};
+            console.log('Error fetching data from World Bank API:', error);
+            await browser.close();
+            return { count: 0, items: [] };
         }
     }
 
-    private transformHtmlToJson(html: string): WorldBankEntity[] {
+    private transformHtmlToJson(html: string): Result {
         const $ = cheerio.load(html);
         const data: WorldBankEntity[]  = [];
         $('table[role="grid"] tbody tr').each((i, row) => {
@@ -58,7 +65,6 @@ export class WorldBankScraper {
             };
             data.push(rowData);
         });
-        console.log('Transformed World Bank Data:', data);
-        return data;
+        return { count: data.length, items: data};
     }
 }

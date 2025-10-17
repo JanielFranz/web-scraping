@@ -6,7 +6,6 @@ This project is a **REST API built with NestJS** that performs **web scraping** 
 
 - **OFAC Sanctions List**
 - **World Bank Debarred Firms**
-- **Offshore Leaks Database**
 
 The API accepts a query name (e.g. company or person), scrapes multiple sources, and returns a combined JSON response with the number of hits and relevant attributes.
 
@@ -33,7 +32,6 @@ Client (Postman)
    ↓
     ├─> OFAC Scraper
     ├─> World Bank Scraper
-    └─> Offshore Leaks Scraper
    ↓
 [Response → JSON with count + entities]
 ```

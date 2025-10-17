@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import axios from "axios";
 import * as cheerio from "cheerio";
+import puppeteer from "puppeteer";
 
 interface WorldBankEntity {
     firmName: string;
@@ -13,25 +14,30 @@ interface WorldBankEntity {
 
 @Injectable()
 export class WorldBankScraper {
-    private readonly apiUrl = 'https://apigwext.worldbank.org/dvsvc/v1.0/json/APPLICATION/ADOBE_EXPRNCE_MGR/FIRM/SANCTIONED_FIRM';
-    private readonly apiKey = 'z9duUaFUiEUYSHs97CU38fcZO7ipOPvm';
+    private readonly worldBankUrl = 'https://projects.worldbank.org/en/projects-operations/procurement/debarred-firms';
 
     async search(name: string) {
+        console.log('the name in world bank is:', name);
         try {
-            const {data} = await axios.get(this.apiUrl, {
-                headers: {
-                    'apikey': this.apiKey,
-                    'Content-Type': 'application/json'
-                }
+            const browser = await puppeteer.launch({
+                headless: true,
+                defaultViewport: null,
             });
 
-            const dataArray = data.response.ZPROCSUPP
-            const matches = this.filterMatches(dataArray, name);
-            const cleanMatches = matches.map(match => this.transformToEntity(match));
+            const page = await browser.newPage();
+            await page.goto(this.worldBankUrl, { waitUntil: 'networkidle2' });
+            await page.waitForSelector('input[id="category"]', { timeout: 20000 }).catch(() => {});
 
-            console.log(cleanMatches);
+            await page.type('input[id="category"]', name, { delay: 100 });
+            await page.keyboard.press('Enter');
 
-            return cleanMatches;
+            await page.waitForSelector('table', { visible: true, timeout: 30000 });
+
+            await page.waitForSelector('div.k-grid-content.k-auto-scrollable table', { visible: true, timeout: 30000 });
+
+            const tableHtml = await page.$eval('div.k-grid-content.k-auto-scrollable table', el => el.outerHTML);
+            console.log('HTML de la tabla:', tableHtml);
+
         } catch (error) {
             console.error('Error fetching data from World Bank API:', error);
             return {message: 'Error fetching data from World Bank API'};

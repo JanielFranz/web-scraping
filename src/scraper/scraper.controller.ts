@@ -8,6 +8,7 @@ export class ScraperController {
 
     @Get('entities/:name/risk-assessment')
     searchEntityInHighRiskList(@Param('name') name: string) {
-        return this.scraperService.searchEntityInHighRiskList(name);
+        //return this.scraperService.searchEntityInHighRiskList(name);
+        return "Hola"
     }
 }

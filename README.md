@@ -35,8 +35,6 @@ Client (Postman)
     ├─> World Bank Scraper
     └─> Offshore Leaks Scraper
    ↓
-[Aggregation Service → Combine + Format Results]
-   ↓
 [Response → JSON with count + entities]
 ```
 
@@ -45,7 +43,6 @@ Client (Postman)
 | Tool                 | Purpose                                        |
 | -------------------- | ---------------------------------------------- |
 | **NestJS**           | Backend framework                              |
-| **Axios**            | HTTP requests                                  |
 | **Cheerio**          | HTML parsing (web scraping)                    |
 | **Puppeteer**        | Headless browser for dynamic pages (e.g. OFAC) |
 | **JWT (Passport)**   | Authentication                                 |

@@ -1,15 +1,14 @@
 import {Injectable} from "@nestjs/common";
-import axios from "axios";
 import * as cheerio from "cheerio";
 import puppeteer from "puppeteer";
 
 interface WorldBankEntity {
     firmName: string;
-    countryName: string;
-    city: string;
     address: string;
-    grounds: string;
+    country: string;
     fromDate: string;
+    toDate: string;
+    grounds: string;
 }
 
 @Injectable()
@@ -17,7 +16,6 @@ export class WorldBankScraper {
     private readonly worldBankUrl = 'https://projects.worldbank.org/en/projects-operations/procurement/debarred-firms';
 
     async search(name: string) {
-        console.log('the name in world bank is:', name);
         try {
             const browser = await puppeteer.launch({
                 headless: true,
@@ -32,11 +30,12 @@ export class WorldBankScraper {
             await page.keyboard.press('Enter');
 
             await page.waitForSelector('table', { visible: true, timeout: 30000 });
-
             await page.waitForSelector('div.k-grid-content.k-auto-scrollable table', { visible: true, timeout: 30000 });
 
             const tableHtml = await page.$eval('div.k-grid-content.k-auto-scrollable table', el => el.outerHTML);
-            console.log('HTML de la tabla:', tableHtml);
+            console.log(tableHtml);
+            await browser.close();
+            return this.transformHtmlToJson(tableHtml);
 
         } catch (error) {
             console.error('Error fetching data from World Bank API:', error);
@@ -44,26 +43,22 @@ export class WorldBankScraper {
         }
     }
 
-    private filterMatches(data: any[], name: string): any {
-
-        if(!Array.isArray(data)) {
-            console.error('Data is not an array:', data);
-            return [];
-        }
-
-        return data.filter(entity => {
-            return entity.SUPP_NAME?.toLowerCase().includes(name.toLowerCase())
-        })
-    }
-
-    private transformToEntity(data: any): WorldBankEntity {
-        return {
-            firmName: data.SUPP_NAME || '',
-            countryName: data.COUNTRY_NAME || '',
-            city: data.SUPP_CITY || '',
-            address: data.SUPP_ADDR || '',
-            grounds: data.DEBAR_REASON || '',
-            fromDate: data.DEBAR_FROM_DATE || '',
-        };
+    private transformHtmlToJson(html: string): WorldBankEntity[] {
+        const $ = cheerio.load(html);
+        const data: WorldBankEntity[]  = [];
+        $('table[role="grid"] tbody tr').each((i, row) => {
+            const cells = $(row).find('td');
+            const rowData = {
+                firmName: $(cells[0]).text().trim(),
+                address: $(cells[2]).text().trim(),
+                country: $(cells[3]).text().trim(),
+                fromDate: $(cells[4]).text().trim(),
+                toDate: $(cells[5]).text().trim(),
+                grounds: $(cells[6]).text().trim(),
+            };
+            data.push(rowData);
+        });
+        console.log('Transformed World Bank Data:', data);
+        return data;
     }
 }

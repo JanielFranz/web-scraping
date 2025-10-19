@@ -35,10 +35,10 @@ export class WorldBankScraper {
             await page.type('input[id="category"]', name, { delay: 100 });
             await page.keyboard.press('Enter');
 
-            //await page.waitForSelector('table', { visible: true, timeout: 30000 });
-            await page.waitForSelector('div.k-grid-content.k-auto-scrollable table', { visible: true, timeout: 4000 });
+            // Wait for the specific tbody selector before extracting HTML
+            await page.waitForSelector('#k-debarred-firms > div.k-grid-content.k-auto-scrollable > table > tbody', { visible: true, timeout: 10000 });
 
-            const tableHtml = await page.$eval('div.k-grid-content.k-auto-scrollable table', el => el.outerHTML);
+            const tableHtml = await page.$eval('#k-debarred-firms > div.k-grid-content.k-auto-scrollable > table', el => el.outerHTML);
 
             await browser.close();
             return this.transformHtmlToJson(tableHtml);

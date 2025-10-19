@@ -9,6 +9,10 @@ This project is a **REST API built with NestJS** that performs **web scraping** 
 
 The API accepts a query name (e.g. company or person), scrapes multiple sources, and returns a combined JSON response with the number of hits and relevant attributes.
 
+## 🔗 Repository
+
+**GitHub:** [https://github.com/JanielFranz/web-scraping](https://github.com/JanielFranz/web-scraping)
+
 ---
 
 ## 🚀 Objectives
